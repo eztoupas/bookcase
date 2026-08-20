@@ -159,23 +159,11 @@ function createBookCard(book) {
 
 // ─── PDF viewer ─────────────────────────────────────────────────
 function openPDF(book) {
-  document.getElementById('viewerTitle').textContent = book.displayName;
-  document.getElementById('viewerDL').href = book.pdfUrl;
-
-  // Use Google Docs viewer as a reliable cross-browser PDF renderer
-  const googleViewer = `https://docs.google.com/viewer?url=${encodeURIComponent(book.pdfUrl)}&embedded=true`;
-  document.getElementById('viewerFrame').src = googleViewer;
-
-  document.getElementById('viewerOverlay').classList.add('open');
-  document.getElementById('viewerPanel').classList.add('open');
-  document.body.style.overflow = 'hidden';
+  window.open(book.pdfUrl, '_blank');
 }
 
 function closePDF() {
-  document.getElementById('viewerOverlay').classList.remove('open');
-  document.getElementById('viewerPanel').classList.remove('open');
-  document.getElementById('viewerFrame').src = '';
-  document.body.style.overflow = '';
+  // (not used — kept for compatibility)
 }
 
 // ─── Render helpers ──────────────────────────────────────────────
