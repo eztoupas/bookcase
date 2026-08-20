@@ -160,17 +160,12 @@ function createBookCard(book) {
 
 // ─── PDF viewer ─────────────────────────────────────────────────
 function openPDF(book) {
-  const a = document.createElement('a');
-  a.href = book.pdfUrl;
-  a.target = '_blank';
-  a.rel = 'noopener noreferrer';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  const viewerUrl = 'https://docs.google.com/viewer?url=' + encodeURIComponent(book.pdfUrl);
+  window.open(viewerUrl, '_blank');
 }
 
 function closePDF() {
-  // (not used — kept for compatibility)
+  // (not used)
 }
 
 // ─── Render helpers ──────────────────────────────────────────────
