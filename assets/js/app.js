@@ -159,7 +159,13 @@ function createBookCard(book) {
 
 // ─── PDF viewer ─────────────────────────────────────────────────
 function openPDF(book) {
-  window.open(book.pdfUrl, '_blank');
+  const a = document.createElement('a');
+  a.href = book.pdfUrl;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
 function closePDF() {
