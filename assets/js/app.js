@@ -1,245 +1,336 @@
-/* ═══════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════════
    Βιβλιοθήκη — app.js
-   Λίστα βιβλίων: GitHub API (με token από localStorage)
-   Εξώφυλλα: PDF.js από GitHub Pages URL
-   Άνοιγμα: νέα καρτέλα → GitHub Pages URL
-═══════════════════════════════════════════════════════════ */
+   Φορτώνει PDF βιβλία από GitHub και εμφανίζει το εξώφυλλο
+   χρησιμοποιώντας PDF.js
+═══════════════════════════════════════════════════════════════ */
 
-// ── PDF.js ──────────────────────────────────────────────────
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+// ─── PDF.js Setup ───────────────────────────────────────────────
+if (typeof pdfjsLib !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
 
-// ── Συλλογές ────────────────────────────────────────────────
-const COLS = [
-  { id:'A_Gymnasiou', label:"Α' Γυμνασίου" },
-  { id:'B_Gymnasiou', label:"Β' Γυμνασίου" },
-  { id:'C_Gymnasiou', label:"Γ' Γυμνασίου" },
-  { id:'A_Lykeiou',   label:"Α' Λυκείου"   },
-  { id:'B_Lykeiou',   label:"Β' Λυκείου"   },
-  { id:'C_Lykeiou',   label:"Γ' Λυκείου"   },
+// ─── Collections ────────────────────────────────────────────────
+const COLLECTIONS = [
+  { id: 'A_Gymnasiou', label: "Α' Γυμνασίου" },
+  { id: 'B_Gymnasiou', label: "Β' Γυμνασίου" },
+  { id: 'C_Gymnasiou', label: "Γ' Γυμνασίου" },
+  { id: 'A_Lykeiou',   label: "Α' Λυκείου"   },
+  { id: 'B_Lykeiou',   label: "Β' Λυκείου"   },
+  { id: 'C_Lykeiou',   label: "Γ' Λυκείου"   },
 ];
-const LABEL = { all:'Αρχική', ...Object.fromEntries(COLS.map(c=>[c.id,c.label])) };
 
+const LABEL = Object.fromEntries([
+  ['all', 'Αρχική'],
+  ...COLLECTIONS.map(c => [c.id, c.label])
+]);
+
+// ─── State ──────────────────────────────────────────────────────
 let currentCol  = 'all';
 let searchQuery = '';
+const coverCache = {};   // pdfUrl → dataURL (runtime cache)
 
-// ── Token ────────────────────────────────────────────────────
-const TK = 'vivliothiki_token';
-const getToken = () => localStorage.getItem(TK) || '';
+// ─── Config validation ──────────────────────────────────────────
+function isConfigured() {
+  return (
+    typeof CONFIG !== 'undefined' &&
+    CONFIG.githubUser &&
+    CONFIG.githubUser !== 'YOUR_GITHUB_USERNAME' &&
+    CONFIG.githubRepo &&
+    CONFIG.githubRepo !== 'YOUR_REPOSITORY_NAME'
+  );
+}
 
-function ghFetch(url) {
-  const token = getToken();
+// ─── GitHub API ─────────────────────────────────────────────────
+async function fetchPDFs(collectionId) {
+  const { githubUser, githubRepo, githubBranch, githubToken } = CONFIG;
+  const url = `https://api.github.com/repos/${githubUser}/${githubRepo}/contents/${collectionId}?ref=${githubBranch}`;
+
   const headers = { 'Accept': 'application/vnd.github.v3+json' };
-  if (token) headers['Authorization'] = `token ${token}`;
-  return fetch(url, { headers });
-}
+  if (githubToken) headers['Authorization'] = `token ${githubToken}`;
 
-// ── URLs ─────────────────────────────────────────────────────
-const pagesURL = (col, file) =>
-  `https://${CONFIG.githubUser}.github.io/${CONFIG.githubRepo}/${col}/${encodeURIComponent(file)}`;
+  const resp = await fetch(url, { headers });
 
-const apiURL = (col) =>
-  `https://api.github.com/repos/${CONFIG.githubUser}/${CONFIG.githubRepo}/contents/${col}`;
-
-// ── Λήψη αρχείων από GitHub API ───────────────────────────
-async function fetchPDFs(col) {
-  const r = await ghFetch(apiURL(col));
-  if (r.status === 404) return [];
-  if (!r.ok) {
-    const e = await r.json().catch(()=>({}));
-    throw Object.assign(new Error(e.message||`GitHub API ${r.status}`), {status:r.status});
+  if (resp.status === 404) return [];   // empty folder
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw Object.assign(new Error(err.message || `GitHub API ${resp.status}`), { status: resp.status });
   }
-  const files = await r.json();
-  return files
-    .filter(f => f.type==='file' && /\.pdf$/i.test(f.name))
-    .map(f => ({ name: f.name, col }));
+
+  const items = await resp.json();
+  return items
+    .filter(f => f.type === 'file' && /\.pdf$/i.test(f.name))
+    .map(f => ({
+      name:       f.name,
+      displayName: prettify(f.name),
+      collection: collectionId,
+      pdfUrl:     rawURL(githubUser, githubRepo, githubBranch, collectionId, f.name),
+    }));
 }
 
-// ── Cover cache ───────────────────────────────────────────
-const coverCache = {};
+function rawURL(user, repo, branch, folder, file) {
+  // GitHub Pages URL — ανοίγει το PDF στον browser αντί να το κατεβάζει
+  return `https://${user}.github.io/${repo}/${folder}/${encodeURIComponent(file)}`;
+}
 
-async function loadCover(pdfUrl, wrapEl) {
-  if (coverCache[pdfUrl]) { insertImg(coverCache[pdfUrl], wrapEl); return; }
+function prettify(filename) {
+  return filename
+    .replace(/\.pdf$/i, '')
+    .replace(/[_\-]+/g, ' ')
+    .trim();
+}
+
+// ─── Cover rendering ────────────────────────────────────────────
+async function renderCover(pdfUrl, wrapEl) {
+  // Check runtime cache first
+  if (coverCache[pdfUrl]) {
+    insertCoverImg(coverCache[pdfUrl], wrapEl);
+    return;
+  }
+
   try {
-    const r   = await fetch(pdfUrl);
-    if (!r.ok) return;
-    const buf = await r.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(buf) }).promise;
-    const pg  = await pdf.getPage(1);
-    const vp  = pg.getViewport({ scale: 300 / pg.getViewport({scale:1}).width });
-    const cv  = document.createElement('canvas');
-    cv.width  = vp.width;
-    cv.height = vp.height;
-    await pg.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
-    const dataURL = cv.toDataURL('image/jpeg', 0.82);
-    coverCache[pdfUrl] = dataURL;
-    insertImg(dataURL, wrapEl);
-  } catch(e) { /* αφήνουμε το placeholder */ }
+    const loadingTask = pdfjsLib.getDocument({
+      url: pdfUrl,
+      cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/',
+      cMapPacked: true,
+      disableWorker: false,
+    });
+
+    const pdf  = await loadingTask.promise;
+    const page = await pdf.getPage(1);
+
+    // Scale to fit ~300px wide for a crisp cover thumbnail
+    const naturalVP = page.getViewport({ scale: 1 });
+    const scale     = 300 / naturalVP.width;
+    const viewport  = page.getViewport({ scale });
+
+    const canvas  = document.createElement('canvas');
+    canvas.width  = viewport.width;
+    canvas.height = viewport.height;
+
+    await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+
+    const dataURL = canvas.toDataURL('image/jpeg', 0.85);
+    coverCache[pdfUrl] = dataURL;    // store in runtime cache
+    insertCoverImg(dataURL, wrapEl);
+
+  } catch (err) {
+    console.warn('Cover render failed:', err);
+    // Leave placeholder as-is (gradient with icon)
+  }
 }
 
-function insertImg(dataURL, wrapEl) {
-  const ph = wrapEl.querySelector('.cover-ph');
+function insertCoverImg(dataURL, wrapEl) {
+  const placeholder = wrapEl.querySelector('.cover-placeholder');
   const img = document.createElement('img');
   img.src = dataURL;
-  if (ph) ph.replaceWith(img); else wrapEl.appendChild(img);
+  img.alt = '';
+  if (placeholder) placeholder.remove();
+  wrapEl.appendChild(img);
 }
 
-// ── Book card ─────────────────────────────────────────────
-function makeCard(file) {
-  const pdfUrl  = pagesURL(file.col, file.name);
-  const display = file.name.replace(/\.pdf$/i,'').replace(/[_-]+/g,' ').trim();
-
-  const card = document.createElement('a');
+// ─── Book card ──────────────────────────────────────────────────
+function createBookCard(book) {
+  const card = document.createElement('div');
   card.className = 'book-card';
-  card.href      = pdfUrl;
-  card.target    = '_blank';
-  card.rel       = 'noopener noreferrer';
-  card.setAttribute('data-col', file.col);
-  card.title     = display;
+  card.setAttribute('data-col', book.collection);
+  card.title = book.displayName;
+  card.onclick = () => openPDF(book);
 
   const wrap = document.createElement('div');
   wrap.className = 'book-cover-wrap';
 
   const ph = document.createElement('div');
-  ph.className = 'cover-ph';
+  ph.className = 'cover-placeholder';
   ph.innerHTML = '<span>📄</span>';
   wrap.appendChild(ph);
 
-  const name = document.createElement('p');
-  name.className = 'book-name';
-  name.textContent = display;
+  const nameEl = document.createElement('p');
+  nameEl.className = 'book-name';
+  nameEl.textContent = book.displayName;
 
   card.appendChild(wrap);
-  card.appendChild(name);
+  card.appendChild(nameEl);
 
-  loadCover(pdfUrl, wrap);   // ασύγχρονο — δεν μπλοκάρει
+  // Kick off cover render (non-blocking)
+  renderCover(book.pdfUrl, wrap);
+
   return card;
 }
 
-// ── Φόρτωση ──────────────────────────────────────────────
-async function load(colId) {
-  document.getElementById('pageTitle').textContent = LABEL[colId];
-  const area = document.getElementById('contentArea');
-  area.innerHTML = '<div class="loader"><div class="spinner"></div><p>Φόρτωση…</p></div>';
+// ─── PDF viewer ─────────────────────────────────────────────────
+function openPDF(book) {
+  const a = document.createElement('a');
+  a.href = book.pdfUrl;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+function closePDF() {
+  // (not used — kept for compatibility)
+}
+
+// ─── Render helpers ──────────────────────────────────────────────
+function showLoader() {
+  document.getElementById('contentArea').innerHTML =
+    '<div class="loader"><div class="spinner"></div><p>Φόρτωση βιβλίων…</p></div>';
+}
+
+function showEmpty(col) {
+  const label = LABEL[col] || col;
+  document.getElementById('contentArea').innerHTML = `
+    <div class="empty-state">
+      <div class="empty-icon">📂</div>
+      <strong>Δεν υπάρχουν βιβλία</strong>
+      <p>Ανέβασε PDF αρχεία στον φάκελο <code>${col}</code> του repository σου.</p>
+    </div>`;
+}
+
+function showAPIError(err) {
+  let msg = err.message || 'Άγνωστο σφάλμα';
+  let hint = '';
+
+  if (err.status === 403) {
+    hint = 'Έφτασες το rate limit του GitHub API (60 req/h). Πρόσθεσε ένα <code>githubToken</code> στο <code>config.js</code> για 5000 req/h.';
+  } else if (err.status === 404) {
+    hint = 'Δεν βρέθηκε το repository. Έλεγξε το <code>config.js</code>.';
+  } else {
+    hint = 'Έλεγξε το <code>config.js</code> και βεβαιώσου ότι το repository είναι public.';
+  }
+
+  document.getElementById('contentArea').innerHTML = `
+    <div class="error-state">
+      <strong>⚠️ Σφάλμα φόρτωσης</strong>
+      ${msg}<br><br>${hint}
+    </div>`;
+}
+
+// ─── Load collection ─────────────────────────────────────────────
+async function loadCollection(colId) {
+  document.getElementById('pageTitle').textContent = LABEL[colId] || colId;
+  showLoader();
+
+  if (!isConfigured()) {
+    document.getElementById('contentArea').innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">⚙️</div>
+        <strong>Απαιτείται ρύθμιση</strong>
+        <p>Άνοιξε το <code>config.js</code> και συμπλήρωσε το GitHub username και repo name σου.</p>
+      </div>`;
+    return;
+  }
 
   try {
-    let files = [];
+    let books = [];
 
     if (colId === 'all') {
-      const results = await Promise.allSettled(COLS.map(c => fetchPDFs(c.id)));
-      results.forEach((r,i) => {
-        if (r.status === 'fulfilled') files.push(...r.value);
-        else console.warn(COLS[i].id, r.reason);
+      const results = await Promise.allSettled(COLLECTIONS.map(c => fetchPDFs(c.id)));
+      const allBooks = [];
+      results.forEach((r, i) => {
+        if (r.status === 'fulfilled') allBooks.push(...r.value);
+        else console.warn(`Failed to load ${COLLECTIONS[i].id}:`, r.reason);
       });
+      books = allBooks;
     } else {
-      files = await fetchPDFs(colId);
+      books = await fetchPDFs(colId);
     }
 
+    // Apply search filter
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      files = files.filter(f =>
-        f.name.replace(/\.pdf$/i,'').replace(/[_-]+/g,' ').toLowerCase().includes(q)
-      );
+      books = books.filter(b => b.displayName.toLowerCase().includes(q) || b.name.toLowerCase().includes(q));
     }
 
+    if (books.length === 0) { showEmpty(colId); return; }
+
+    const area = document.getElementById('contentArea');
     area.innerHTML = '';
 
-    if (!files.length) {
-      area.innerHTML = `<div class="empty"><div class="empty-icon">📂</div>
-        <strong>Δεν υπάρχουν βιβλία</strong>
-        <p>Ανέβασε PDF αρχεία στον φάκελο <code>${colId}</code> του GitHub repo σου.</p></div>`;
-      return;
-    }
-
     if (colId === 'all') {
-      COLS.forEach(col => {
-        const cf = files.filter(f => f.col === col.id);
-        if (!cf.length) return;
-        const sec = document.createElement('div');
-        sec.className = 'col-section';
-        sec.innerHTML = `<h3 class="col-title">${col.label}</h3>`;
+      // Group by collection, show each as a section
+      COLLECTIONS.forEach(col => {
+        const colBooks = books.filter(b => b.collection === col.id);
+        if (colBooks.length === 0) return;
+
+        const section = document.createElement('div');
+        section.className = 'col-section';
+
+        const heading = document.createElement('h3');
+        heading.className = 'col-section-title';
+        heading.textContent = col.label;
+        section.appendChild(heading);
+
         const grid = document.createElement('div');
         grid.className = 'books-grid';
-        cf.forEach(f => grid.appendChild(makeCard(f)));
-        sec.appendChild(grid);
-        area.appendChild(sec);
+        colBooks.forEach(b => grid.appendChild(createBookCard(b)));
+        section.appendChild(grid);
+        area.appendChild(section);
       });
     } else {
       const grid = document.createElement('div');
       grid.className = 'books-grid';
-      files.forEach(f => grid.appendChild(makeCard(f)));
+      books.forEach(b => grid.appendChild(createBookCard(b)));
       area.appendChild(grid);
     }
 
-  } catch(err) {
-    const is403 = err.status === 403 || err.status === 429;
-    area.innerHTML = `
-      <div class="error-box">
-        <strong>⚠️ ${is403 ? 'Rate limit — χρειάζεσαι token' : 'Σφάλμα φόρτωσης'}</strong>
-        <p>${err.message}</p>
-        ${is403 ? '<button class="open-settings-btn" onclick="openSettings()">⚙️ Άνοιγμα Ρυθμίσεων για token</button>' : ''}
-      </div>`;
+  } catch (err) {
+    console.error('Load error:', err);
+    showAPIError(err);
   }
 }
 
-// ── Navigation ────────────────────────────────────────────
+// ─── Navigation ──────────────────────────────────────────────────
 function selectCollection(colId, btn) {
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
   btn.classList.add('active');
   currentCol = colId;
-  load(colId);
+  loadCollection(colId);
 }
 
+// ─── Search ──────────────────────────────────────────────────────
 function clearSearch() {
   document.getElementById('searchInput').value = '';
   searchQuery = '';
   document.getElementById('searchClear').classList.remove('visible');
-  load(currentCol);
+  loadCollection(currentCol);
 }
 
-// ── Settings ──────────────────────────────────────────────
-function openSettings() {
-  document.getElementById('tokenInput').value = getToken();
-  refreshTokenStatus();
-  document.getElementById('modalBg').classList.add('open');
-  document.getElementById('settingsPanel').classList.add('open');
-}
-function closeSettings() {
-  document.getElementById('modalBg').classList.remove('open');
-  document.getElementById('settingsPanel').classList.remove('open');
-}
-function saveToken() {
-  const val = document.getElementById('tokenInput').value.trim();
-  if (val) localStorage.setItem(TK, val);
-  else localStorage.removeItem(TK);
-  refreshTokenStatus();
-  closeSettings();
-  load(currentCol);   // ξαναφόρτωσε με token
-}
-function refreshTokenStatus() {
-  const t  = getToken();
-  const el = document.getElementById('tokenStatus');
-  el.textContent = t ? `✅ Token: ${t.slice(0,8)}…` : '⚠️ Δεν έχεις token — μόνο 60 req/h.';
-  el.className   = 'token-status ' + (t ? 'ok' : 'warn');
+// ─── Setup overlay ───────────────────────────────────────────────
+function dismissSetup() {
+  document.getElementById('setupOverlay').classList.add('hidden');
 }
 
-// ── Init ──────────────────────────────────────────────────
+// ─── Init ────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  // Αν δεν υπάρχει token, άνοιξε αυτόματα τις ρυθμίσεις
-  if (!getToken()) openSettings();
+  // Show setup overlay if not configured
+  if (!isConfigured()) {
+    document.getElementById('setupOverlay').classList.remove('hidden');
+  } else {
+    document.getElementById('setupOverlay').classList.add('hidden');
+  }
 
+  // Search input
   const inp = document.getElementById('searchInput');
-  let timer;
+  let debounceTimer;
   inp.addEventListener('input', e => {
     searchQuery = e.target.value.trim();
-    document.getElementById('searchClear').classList.toggle('visible', !!searchQuery);
-    clearTimeout(timer);
-    timer = setTimeout(() => load(currentCol), 300);
+    document.getElementById('searchClear').classList.toggle('visible', searchQuery.length > 0);
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => loadCollection(currentCol), 350);
   });
 
+  // Keyboard shortcuts
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeSettings();
+    if (e.key === 'Escape') closePDF();
+    if (e.key === '/' && document.activeElement !== inp) {
+      e.preventDefault();
+      inp.focus();
+    }
   });
 
-  load('all');
+  // Initial load
+  loadCollection('all');
 });
