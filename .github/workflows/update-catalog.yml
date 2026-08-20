@@ -9,6 +9,7 @@ on:
       - 'A_Lykeiou/**'
       - 'B_Lykeiou/**'
       - 'C_Lykeiou/**'
+  workflow_dispatch:   # ← επιτρέπει χειροκίνητη εκτέλεση
 
 jobs:
   update:
@@ -31,9 +32,16 @@ jobs:
                   catalog[f] = []
           with open('catalog.json','w',encoding='utf-8') as fp:
               json.dump(catalog, fp, ensure_ascii=False, indent=2)
-          print("catalog.json updated:", catalog)
+          print("OK:", catalog)
           PYEOF
 
+      - name: Commit catalog.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add catalog.json
+          git diff --staged --quiet || git commit -m "Auto: ενημέρωση catalog.json"
+          git push
       - name: Commit catalog.json
         run: |
           git config user.name "github-actions[bot]"
