@@ -69,7 +69,8 @@ async function fetchPDFs(collectionId) {
 }
 
 function rawURL(user, repo, branch, folder, file) {
-  return `https://raw.githubusercontent.com/${user}/${repo}/${branch}/${folder}/${encodeURIComponent(file)}`;
+  // GitHub Pages URL — ανοίγει το PDF στον browser αντί να το κατεβάζει
+  return `https://${user}.github.io/${repo}/${folder}/${encodeURIComponent(file)}`;
 }
 
 function prettify(filename) {
@@ -159,23 +160,17 @@ function createBookCard(book) {
 
 // ─── PDF viewer ─────────────────────────────────────────────────
 function openPDF(book) {
-  document.getElementById('viewerTitle').textContent = book.displayName;
-  document.getElementById('viewerDL').href = book.pdfUrl;
-
-  // Use Google Docs viewer as a reliable cross-browser PDF renderer
-  const googleViewer = `https://docs.google.com/viewer?url=${encodeURIComponent(book.pdfUrl)}&embedded=true`;
-  document.getElementById('viewerFrame').src = googleViewer;
-
-  document.getElementById('viewerOverlay').classList.add('open');
-  document.getElementById('viewerPanel').classList.add('open');
-  document.body.style.overflow = 'hidden';
+  const a = document.createElement('a');
+  a.href = book.pdfUrl;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
 function closePDF() {
-  document.getElementById('viewerOverlay').classList.remove('open');
-  document.getElementById('viewerPanel').classList.remove('open');
-  document.getElementById('viewerFrame').src = '';
-  document.body.style.overflow = '';
+  // (not used — kept for compatibility)
 }
 
 // ─── Render helpers ──────────────────────────────────────────────
