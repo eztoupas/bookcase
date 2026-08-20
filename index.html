@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Βιβλιοθήκη</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <h1 class="app-name">Βιβλιοθήκη</h1>
+      <div class="search-wrap">
+        <div class="search-box">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="searchInput" class="search-inp" placeholder="Αναζήτηση">
+          <button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
+        </div>
+      </div>
+    </div>
+    <nav class="nav-group">
+      <button class="nav-btn active" onclick="selectCollection('all',this)">
+        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></span>Αρχική
+      </button>
+    </nav>
+    <div class="nav-section">
+      <p class="nav-label">Γυμνάσιο</p>
+      <nav class="nav-group">
+        <button class="nav-btn" onclick="selectCollection('A_Gymnasiou',this)"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>Α' Γυμνασίου</button>
+        <button class="nav-btn" onclick="selectCollection('B_Gymnasiou',this)"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>Β' Γυμνασίου</button>
+        <button class="nav-btn" onclick="selectCollection('C_Gymnasiou',this)"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>Γ' Γυμνασίου</button>
+      </nav>
+    </div>
+    <div class="nav-section">
+      <p class="nav-label">Λύκειο</p>
+      <nav class="nav-group">
+        <button class="nav-btn" onclick="selectCollection('A_Lykeiou',this)"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>Α' Λυκείου</button>
+        <button class="nav-btn" onclick="selectCollection('B_Lykeiou',this)"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>Β' Λυκείου</button>
+        <button class="nav-btn" onclick="selectCollection('C_Lykeiou',this)"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>Γ' Λυκείου</button>
+      </nav>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="main-inner">
+      <h2 class="page-title" id="pageTitle">Αρχική</h2>
+      <div class="content-area" id="contentArea"></div>
+    </div>
+  </main>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<script src="config.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
