@@ -131,11 +131,16 @@ function insertCoverImg(dataURL, wrapEl) {
 
 // ─── Book card ──────────────────────────────────────────────────
 function createBookCard(book) {
-  const card = document.createElement('div');
+  // Χρησιμοποιούμε <a> tag με target="_blank" — ο πιο αξιόπιστος τρόπος νέας καρτέλας
+  const viewerUrl = 'https://docs.google.com/viewer?url=' + encodeURIComponent(book.pdfUrl);
+
+  const card = document.createElement('a');
   card.className = 'book-card';
+  card.href = viewerUrl;
+  card.target = '_blank';
+  card.rel = 'noopener noreferrer';
   card.setAttribute('data-col', book.collection);
   card.title = book.displayName;
-  card.onclick = () => openPDF(book);
 
   const wrap = document.createElement('div');
   wrap.className = 'book-cover-wrap';
@@ -158,15 +163,8 @@ function createBookCard(book) {
   return card;
 }
 
-// ─── PDF viewer ─────────────────────────────────────────────────
-function openPDF(book) {
-  const viewerUrl = 'https://docs.google.com/viewer?url=' + encodeURIComponent(book.pdfUrl);
-  window.open(viewerUrl, '_blank');
-}
-
-function closePDF() {
-  // (not used)
-}
+function openPDF(book) {}   // kept for compatibility
+function closePDF() {}
 
 // ─── Render helpers ──────────────────────────────────────────────
 function showLoader() {
