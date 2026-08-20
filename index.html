@@ -1,55 +1,220 @@
 <!DOCTYPE html>
 <html lang="el">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Βιβλιοθήκη</title>
-  <link rel="stylesheet" href="assets/css/style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Βιβλιοθήκη</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f2f2f7;--sb:#fff;--border:#e5e5ea;--accent:#007aff;--abg:rgba(0,122,255,.1);--t1:#1c1c1e;--t2:#636366;--t3:#8e8e93;--sw:224px}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;font-size:15px;color:var(--t1);background:var(--bg);-webkit-font-smoothing:antialiased}
+.app{display:flex;height:100vh}
+.sidebar{width:var(--sw);min-width:var(--sw);background:var(--sb);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
+.sidebar-top{padding:20px 14px 8px;position:sticky;top:0;background:var(--sb);z-index:1}
+.app-name{font-size:20px;font-weight:700;margin-bottom:12px;padding-left:4px}
+.sbox{display:flex;align-items:center;gap:6px;background:var(--bg);border-radius:10px;padding:7px 10px;margin-bottom:4px}
+.sbox svg{color:var(--t3);flex-shrink:0}
+.sinp{border:none;background:none;outline:none;font-size:14px;color:var(--t1);width:100%}
+.sinp::placeholder{color:var(--t3)}
+.sclear{border:none;background:none;color:var(--t3);font-size:12px;cursor:pointer;display:none}
+.sclear.v{display:block}
+.navg{display:flex;flex-direction:column;padding:4px 8px}
+.nbtn{display:flex;align-items:center;gap:9px;padding:8px 10px;border:none;background:none;cursor:pointer;font-size:14px;font-weight:500;color:var(--t1);text-align:left;border-radius:9px;width:100%;transition:background .12s}
+.nbtn:hover{background:var(--bg)}
+.nbtn.active{background:var(--abg);color:var(--accent)}
+.nbtn.active .ni{color:var(--accent)}
+.ni{color:var(--t2);display:flex;align-items:center;flex-shrink:0}
+.nsec{padding-top:8px}
+.nlabel{font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;padding:8px 18px 4px}
+.main{flex:1;overflow-y:auto}
+.mi{padding:36px 40px 60px}
+.ptitle{font-size:30px;font-weight:700;margin-bottom:28px}
+.csec{margin-bottom:40px}
+.ctitle{font-size:20px;font-weight:600;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:24px 20px}
+a.card{display:flex;flex-direction:column;min-width:0;text-decoration:none;color:inherit}
+.cwrap{position:relative;width:100%;padding-bottom:142%;border-radius:9px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.14),0 1px 4px rgba(0,0,0,.08);background:#d8d8de;transition:transform .22s,box-shadow .22s}
+.card:hover .cwrap{transform:scale(1.04) translateY(-4px);box-shadow:0 10px 30px rgba(0,0,0,.2),0 4px 10px rgba(0,0,0,.1)}
+.cwrap img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:32px}
+[data-col="A_Gymnasiou"] .cph{background:linear-gradient(145deg,#4facfe,#00c6ff)}
+[data-col="B_Gymnasiou"] .cph{background:linear-gradient(145deg,#43e97b,#38f9d7)}
+[data-col="C_Gymnasiou"] .cph{background:linear-gradient(145deg,#fa8231,#f9ca24)}
+[data-col="A_Lykeiou"] .cph{background:linear-gradient(145deg,#a18cd1,#fbc2eb)}
+[data-col="B_Lykeiou"] .cph{background:linear-gradient(145deg,#f5576c,#f093fb)}
+[data-col="C_Lykeiou"] .cph{background:linear-gradient(145deg,#30cfd0,#330867)}
+.cname{margin-top:9px;font-size:12px;font-weight:500;text-align:center;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.35;min-height:32px}
+.loader{display:flex;flex-direction:column;align-items:center;gap:16px;padding:80px 20px;color:var(--t3);font-size:14px}
+.spin{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:sp .75s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.empty{display:flex;flex-direction:column;align-items:center;gap:10px;padding:80px 20px;color:var(--t3);text-align:center}
+.empty-icon{font-size:52px}
+.empty strong{color:var(--t2);font-size:16px}
+.ebox{background:#fff3cd;border:1px solid #ffc107;border-radius:12px;padding:20px 24px;max-width:500px}
+.ebox strong{display:block;margin-bottom:8px}
+.ebox p{font-size:13px;color:var(--t2);line-height:1.5}
+@media(max-width:700px){:root{--sw:190px}.mi{padding:20px 16px 40px}.grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:16px 12px}}
+</style>
 </head>
 <body>
 <div class="app">
   <aside class="sidebar">
     <div class="sidebar-top">
       <h1 class="app-name">Βιβλιοθήκη</h1>
-      <div class="search-wrap">
-        <div class="search-box">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <input type="text" id="searchInput" class="search-inp" placeholder="Αναζήτηση">
-          <button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
-        </div>
+      <div class="sbox">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="si" class="sinp" placeholder="Αναζήτηση">
+        <button class="sclear" id="sc" onclick="clrSearch()">✕</button>
       </div>
     </div>
-    <nav class="nav-group">
-      <button class="nav-btn active" onclick="selectCollection('all',this)">
-        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></span>Αρχική
-      </button>
-    </nav>
-    <div class="nav-section">
-      <p class="nav-label">Γυμνάσιο</p>
-      <nav class="nav-group">
-        <button class="nav-btn" onclick="selectCollection('A_Gymnasiou',this)"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>Α' Γυμνασίου</button>
-        <button class="nav-btn" onclick="selectCollection('B_Gymnasiou',this)"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>Β' Γυμνασίου</button>
-        <button class="nav-btn" onclick="selectCollection('C_Gymnasiou',this)"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>Γ' Γυμνασίου</button>
-      </nav>
+    <div class="navg">
+      <button class="nbtn active" onclick="selCol('all',this)"><span class="ni"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></span>Αρχική</button>
     </div>
-    <div class="nav-section">
-      <p class="nav-label">Λύκειο</p>
-      <nav class="nav-group">
-        <button class="nav-btn" onclick="selectCollection('A_Lykeiou',this)"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>Α' Λυκείου</button>
-        <button class="nav-btn" onclick="selectCollection('B_Lykeiou',this)"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>Β' Λυκείου</button>
-        <button class="nav-btn" onclick="selectCollection('C_Lykeiou',this)"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>Γ' Λυκείου</button>
-      </nav>
+    <div class="nsec">
+      <p class="nlabel">Γυμνάσιο</p>
+      <div class="navg">
+        <button class="nbtn" onclick="selCol('A_Gymnasiou',this)"><span class="ni"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>Α' Γυμνασίου</button>
+        <button class="nbtn" onclick="selCol('B_Gymnasiou',this)"><span class="ni"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>Β' Γυμνασίου</button>
+        <button class="nbtn" onclick="selCol('C_Gymnasiou',this)"><span class="ni"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>Γ' Γυμνασίου</button>
+      </div>
+    </div>
+    <div class="nsec">
+      <p class="nlabel">Λύκειο</p>
+      <div class="navg">
+        <button class="nbtn" onclick="selCol('A_Lykeiou',this)"><span class="ni"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>Α' Λυκείου</button>
+        <button class="nbtn" onclick="selCol('B_Lykeiou',this)"><span class="ni"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>Β' Λυκείου</button>
+        <button class="nbtn" onclick="selCol('C_Lykeiou',this)"><span class="ni"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>Γ' Λυκείου</button>
+      </div>
     </div>
   </aside>
   <main class="main">
-    <div class="main-inner">
-      <h2 class="page-title" id="pageTitle">Αρχική</h2>
-      <div class="content-area" id="contentArea"></div>
+    <div class="mi">
+      <h2 class="ptitle" id="ptitle">Αρχική</h2>
+      <div id="area"></div>
     </div>
   </main>
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-<script src="config.js"></script>
-<script src="assets/js/app.js"></script>
+<script>
+// ── Ρύθμιση ────────────────────────────────────────────────
+const GH_USER = 'eztoupas';
+const GH_REPO = 'bookcase';
+const BASE    = `https://${GH_USER}.github.io/${GH_REPO}`;
+
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+const COLS = [
+  {id:'A_Gymnasiou',label:"Α' Γυμνασίου"},
+  {id:'B_Gymnasiou',label:"Β' Γυμνασίου"},
+  {id:'C_Gymnasiou',label:"Γ' Γυμνασίου"},
+  {id:'A_Lykeiou',  label:"Α' Λυκείου"},
+  {id:'B_Lykeiou',  label:"Β' Λυκείου"},
+  {id:'C_Lykeiou',  label:"Γ' Λυκείου"},
+];
+const LABELS = {all:'Αρχική',...Object.fromEntries(COLS.map(c=>[c.id,c.label]))};
+
+let curCol='all', srch='';
+const covers={};
+
+async function getCatalog(){
+  const r=await fetch(`${BASE}/catalog.json?_=${Date.now()}`);
+  if(!r.ok) throw new Error('Δεν βρέθηκε το catalog.json — ανέβασέ το στο GitHub.');
+  return r.json();
+}
+
+async function mkCover(url,wrap){
+  if(covers[url]){putImg(covers[url],wrap);return;}
+  try{
+    const r=await fetch(url);
+    if(!r.ok)return;
+    const buf=await r.arrayBuffer();
+    const pdf=await pdfjsLib.getDocument({data:new Uint8Array(buf)}).promise;
+    const pg=await pdf.getPage(1);
+    const vp=pg.getViewport({scale:300/pg.getViewport({scale:1}).width});
+    const cv=document.createElement('canvas');
+    cv.width=vp.width;cv.height=vp.height;
+    await pg.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
+    covers[url]=cv.toDataURL('image/jpeg',.82);
+    putImg(covers[url],wrap);
+  }catch{}
+}
+
+function putImg(src,wrap){
+  const img=document.createElement('img');
+  img.src=src;
+  const ph=wrap.querySelector('.cph');
+  if(ph)ph.replaceWith(img);else wrap.appendChild(img);
+}
+
+function mkCard(fname,colId){
+  const url=`${BASE}/${colId}/${encodeURIComponent(fname)}`;
+  const disp=fname.replace(/\.pdf$/i,'').replace(/[_-]+/g,' ').trim();
+  const a=document.createElement('a');
+  a.className='card';a.href=url;a.target='_blank';a.rel='noopener noreferrer';
+  a.setAttribute('data-col',colId);a.title=disp;
+  const w=document.createElement('div');w.className='cwrap';
+  const ph=document.createElement('div');ph.className='cph';ph.textContent='📄';
+  w.appendChild(ph);
+  const n=document.createElement('p');n.className='cname';n.textContent=disp;
+  a.appendChild(w);a.appendChild(n);
+  mkCover(url,w);
+  return a;
+}
+
+async function load(col){
+  document.getElementById('ptitle').textContent=LABELS[col];
+  const area=document.getElementById('area');
+  area.innerHTML='<div class="loader"><div class="spin"></div><p>Φόρτωση…</p></div>';
+  try{
+    const cat=await getCatalog();
+    let items=[];
+    if(col==='all') COLS.forEach(c=>(cat[c.id]||[]).forEach(f=>items.push({f,col:c.id})));
+    else (cat[col]||[]).forEach(f=>items.push({f,col}));
+    if(srch){const q=srch.toLowerCase();items=items.filter(i=>i.f.replace(/\.pdf$/i,'').replace(/[_-]+/g,' ').toLowerCase().includes(q));}
+    area.innerHTML='';
+    if(!items.length){
+      area.innerHTML=`<div class="empty"><div class="empty-icon">📂</div><strong>Δεν υπάρχουν βιβλία</strong><p>Ανέβασε PDF στον φάκελο <code>${col}</code> στο GitHub.</p></div>`;
+      return;
+    }
+    if(col==='all'){
+      COLS.forEach(c=>{
+        const ci=items.filter(i=>i.col===c.id);
+        if(!ci.length)return;
+        const sec=document.createElement('div');sec.className='csec';
+        const h=document.createElement('h3');h.className='ctitle';h.textContent=c.label;
+        sec.appendChild(h);
+        const g=document.createElement('div');g.className='grid';
+        ci.forEach(i=>g.appendChild(mkCard(i.f,i.col)));
+        sec.appendChild(g);area.appendChild(sec);
+      });
+    }else{
+      const g=document.createElement('div');g.className='grid';
+      items.forEach(i=>g.appendChild(mkCard(i.f,i.col)));
+      area.appendChild(g);
+    }
+  }catch(e){
+    area.innerHTML=`<div class="ebox"><strong>⚠️ Σφάλμα</strong><p>${e.message}</p></div>`;
+  }
+}
+
+function selCol(col,btn){
+  document.querySelectorAll('.nbtn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');curCol=col;load(col);
+}
+function clrSearch(){
+  document.getElementById('si').value='';srch='';
+  document.getElementById('sc').classList.remove('v');load(curCol);
+}
+
+document.getElementById('si').addEventListener('input',e=>{
+  srch=e.target.value.trim();
+  document.getElementById('sc').classList.toggle('v',!!srch);
+  clearTimeout(window._st);
+  window._st=setTimeout(()=>load(curCol),300);
+});
+
+load('all');
+</script>
 </body>
 </html>
