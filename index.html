@@ -7,128 +7,84 @@
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
-
-  <!-- Setup overlay (shown if config not filled in) -->
-  <div class="setup-overlay" id="setupOverlay">
-    <div class="setup-card">
-      <div class="setup-icon">📚</div>
-      <h2>Καλώς ήρθες στη Βιβλιοθήκη!</h2>
-      <p>Για να λειτουργήσει η σελίδα, άνοιξε το αρχείο <code>config.js</code> και βάλε το GitHub username και το repository name σου.</p>
-      <div class="setup-step">
-        <span class="step-num">1</span>
-        Άνοιξε το <code>config.js</code>
-      </div>
-      <div class="setup-step">
-        <span class="step-num">2</span>
-        Άλλαξε <code>YOUR_GITHUB_USERNAME</code> με το username σου
-      </div>
-      <div class="setup-step">
-        <span class="step-num">3</span>
-        Άλλαξε <code>YOUR_REPOSITORY_NAME</code> με το όνομα του repo
-      </div>
-      <div class="setup-step">
-        <span class="step-num">4</span>
-        Ανέβασε τα αρχεία στο GitHub και ενεργοποίησε το GitHub Pages
-      </div>
-      <button class="setup-btn" onclick="dismissSetup()">Συνέχεια ούτως ή άλλως</button>
-    </div>
-  </div>
-
-  <div class="app">
-    <!-- Sidebar -->
-    <aside class="sidebar">
-      <div class="sidebar-top">
-        <h1 class="app-name">Βιβλιοθήκη</h1>
-        <div class="search-wrap">
-          <div class="search-box">
-            <svg class="search-ico" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-            </svg>
-            <input type="text" id="searchInput" class="search-inp" placeholder="Αναζήτηση">
-            <button class="search-clear" id="searchClear" onclick="clearSearch()" title="Καθαρισμός">✕</button>
-          </div>
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <h1 class="app-name">Βιβλιοθήκη</h1>
+      <div class="search-wrap">
+        <div class="search-box">
+          <svg class="search-ico" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="searchInput" class="search-inp" placeholder="Αναζήτηση">
+          <button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
         </div>
       </div>
+    </div>
 
+    <nav class="nav-group">
+      <button class="nav-btn active" onclick="selectCollection('all', this)">
+        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></span>
+        Αρχική
+      </button>
+    </nav>
+
+    <div class="nav-section">
+      <p class="nav-label">Γυμνάσιο</p>
       <nav class="nav-group">
-        <button class="nav-btn active" data-col="all" onclick="selectCollection('all', this)">
-          <span class="nav-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-          </span>
-          Αρχική
-        </button>
+        <button class="nav-btn" onclick="selectCollection('A_Gymnasiou',this)"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>Α' Γυμνασίου</button>
+        <button class="nav-btn" onclick="selectCollection('B_Gymnasiou',this)"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>Β' Γυμνασίου</button>
+        <button class="nav-btn" onclick="selectCollection('C_Gymnasiou',this)"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>Γ' Γυμνασίου</button>
       </nav>
+    </div>
+    <div class="nav-section">
+      <p class="nav-label">Λύκειο</p>
+      <nav class="nav-group">
+        <button class="nav-btn" onclick="selectCollection('A_Lykeiou',this)"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>Α' Λυκείου</button>
+        <button class="nav-btn" onclick="selectCollection('B_Lykeiou',this)"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>Β' Λυκείου</button>
+        <button class="nav-btn" onclick="selectCollection('C_Lykeiou',this)"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>Γ' Λυκείου</button>
+      </nav>
+    </div>
 
-      <div class="nav-section">
-        <p class="nav-label">Γυμνάσιο</p>
-        <nav class="nav-group" id="gymNav">
-          <button class="nav-btn" data-col="A_Gymnasiou" onclick="selectCollection('A_Gymnasiou', this)">
-            <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>
-            Α' Γυμνασίου
-          </button>
-          <button class="nav-btn" data-col="B_Gymnasiou" onclick="selectCollection('B_Gymnasiou', this)">
-            <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>
-            Β' Γυμνασίου
-          </button>
-          <button class="nav-btn" data-col="C_Gymnasiou" onclick="selectCollection('C_Gymnasiou', this)">
-            <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>
-            Γ' Γυμνασίου
-          </button>
-        </nav>
-      </div>
+    <div class="sidebar-footer">
+      <button class="settings-btn" onclick="openSettings()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Ρυθμίσεις
+      </button>
+    </div>
+  </aside>
 
-      <div class="nav-section">
-        <p class="nav-label">Λύκειο</p>
-        <nav class="nav-group" id="lykNav">
-          <button class="nav-btn" data-col="A_Lykeiou" onclick="selectCollection('A_Lykeiou', this)">
-            <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>
-            Α' Λυκείου
-          </button>
-          <button class="nav-btn" data-col="B_Lykeiou" onclick="selectCollection('B_Lykeiou', this)">
-            <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>
-            Β' Λυκείου
-          </button>
-          <button class="nav-btn" data-col="C_Lykeiou" onclick="selectCollection('C_Lykeiou', this)">
-            <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>
-            Γ' Λυκείου
-          </button>
-        </nav>
-      </div>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="main" id="main">
-      <div class="main-inner">
-        <h2 class="page-title" id="pageTitle">Αρχική</h2>
-        <div class="content-area" id="contentArea">
-          <div class="loader" id="loader">
-            <div class="spinner"></div>
-            <p>Φόρτωση βιβλιοθήκης…</p>
-          </div>
-        </div>
-      </div>
-    </main>
-  </div>
-
-  <!-- PDF viewer overlay -->
-  <div class="viewer-overlay" id="viewerOverlay" onclick="closePDF()"></div>
-  <div class="viewer-panel" id="viewerPanel">
-    <div class="viewer-bar">
-      <span class="viewer-title" id="viewerTitle"></span>
-      <div class="viewer-actions">
-        <a class="viewer-dl" id="viewerDL" href="#" target="_blank" title="Άνοιγμα σε νέα καρτέλα">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-        </a>
-        <button class="viewer-close" onclick="closePDF()">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
+  <main class="main">
+    <div class="main-inner">
+      <h2 class="page-title" id="pageTitle">Αρχική</h2>
+      <div class="content-area" id="contentArea">
+        <div class="loader"><div class="spinner"></div><p>Φόρτωση…</p></div>
       </div>
     </div>
-    <iframe class="viewer-frame" id="viewerFrame" src="" allowfullscreen></iframe>
-  </div>
+  </main>
+</div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script src="config.js"></script>
-  <script src="assets/js/app.js"></script>
+<!-- Settings modal -->
+<div class="modal-bg" id="settingsBg" onclick="closeSettings()"></div>
+<div class="settings-panel" id="settingsPanel">
+  <div class="settings-header">
+    <h3>Ρυθμίσεις</h3>
+    <button onclick="closeSettings()" class="close-btn">✕</button>
+  </div>
+  <p class="settings-desc">Το token αποθηκεύεται <strong>μόνο στον browser σου</strong> — δεν ανεβαίνει πουθενά.</p>
+  <label class="field-label">GitHub Personal Access Token</label>
+  <input type="password" id="tokenInput" class="field-input" placeholder="ghp_xxxxxxxxxxxx">
+  <p class="field-hint">Πώς να φτιάξεις token: GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate → επίλεξε <strong>repo</strong></p>
+  <button class="save-btn" onclick="saveToken()">Αποθήκευση</button>
+  <div class="token-status" id="tokenStatus"></div>
+</div>
+
+<!-- File input -->
+<input type="file" id="fileInput" accept=".pdf" multiple style="display:none">
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="config.js"></script>
+<script src="assets/js/app.js"></script>
 </body>
 </html>
