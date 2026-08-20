@@ -1,0 +1,43 @@
+name: Ενημέρωση Καταλόγου
+
+on:
+  push:
+    paths:
+      - 'A_Gymnasiou/**'
+      - 'B_Gymnasiou/**'
+      - 'C_Gymnasiou/**'
+      - 'A_Lykeiou/**'
+      - 'B_Lykeiou/**'
+      - 'C_Lykeiou/**'
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Δημιουργία catalog.json
+        run: |
+          python3 - << 'PYEOF'
+          import os, json
+          folders = ['A_Gymnasiou','B_Gymnasiou','C_Gymnasiou','A_Lykeiou','B_Lykeiou','C_Lykeiou']
+          catalog = {}
+          for f in folders:
+              if os.path.isdir(f):
+                  catalog[f] = sorted([x for x in os.listdir(f) if x.lower().endswith('.pdf')])
+              else:
+                  catalog[f] = []
+          with open('catalog.json','w',encoding='utf-8') as fp:
+              json.dump(catalog, fp, ensure_ascii=False, indent=2)
+          print("catalog.json updated:", catalog)
+          PYEOF
+
+      - name: Commit catalog.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add catalog.json
+          git diff --staged --quiet || git commit -m "Auto: ενημέρωση catalog.json"
+          git push
