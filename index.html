@@ -13,7 +13,7 @@
       <h1 class="app-name">Βιβλιοθήκη</h1>
       <div class="search-wrap">
         <div class="search-box">
-          <svg class="search-ico" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           <input type="text" id="searchInput" class="search-inp" placeholder="Αναζήτηση">
           <button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
         </div>
@@ -21,7 +21,7 @@
     </div>
 
     <nav class="nav-group">
-      <button class="nav-btn active" onclick="selectCollection('all', this)">
+      <button class="nav-btn active" onclick="selectCollection('all',this)">
         <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></span>
         Αρχική
       </button>
@@ -55,35 +55,40 @@
   <main class="main">
     <div class="main-inner">
       <h2 class="page-title" id="pageTitle">Αρχική</h2>
-      <div class="content-area" id="contentArea">
-        <div class="loader"><div class="spinner"></div><p>Φόρτωση…</p></div>
-      </div>
+      <div class="content-area" id="contentArea"></div>
     </div>
   </main>
 </div>
 
-<!-- Settings modal -->
-<div class="modal-bg" id="settingsBg" onclick="closeSettings()"></div>
+<!-- Settings -->
+<div class="modal-bg" id="modalBg" onclick="closeSettings()"></div>
 <div class="settings-panel" id="settingsPanel">
   <div class="settings-header">
-    <h3>Ρυθμίσεις</h3>
+    <h3>⚙️ Ρυθμίσεις</h3>
     <button onclick="closeSettings()" class="close-btn">✕</button>
   </div>
-  <p class="settings-desc">Το token αποθηκεύεται <strong>μόνο στον browser σου</strong> — δεν ανεβαίνει πουθενά.</p>
+
+  <div class="info-box">
+    Το token αποθηκεύεται <strong>μόνο στον browser σου</strong> (localStorage).<br>
+    Δεν μπαίνει πουθενά στον κώδικα — δεν το βλέπει κανείς άλλος.
+  </div>
+
   <label class="field-label">GitHub Personal Access Token</label>
-  <input type="password" id="tokenInput" class="field-input" placeholder="ghp_xxxxxxxxxxxx">
-  <p class="field-hint">Πώς να φτιάξεις token: GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate → επίλεξε <strong>repo</strong></p>
-  <button class="save-btn" onclick="saveToken()">Αποθήκευση</button>
-  <div class="token-status" id="tokenStatus"></div>
+  <input type="password" id="tokenInput" class="field-input" placeholder="ghp_xxxxxxxxxxxxxxxx">
+
+  <div class="info-box" style="margin-top:12px; font-size:12px;">
+    <strong>Πώς να φτιάξεις token:</strong><br>
+    GitHub → avatar → Settings → Developer settings<br>
+    → Personal access tokens → Tokens (classic)<br>
+    → Generate new token → επίλεξε <strong>repo</strong> → Generate<br>
+    Αντέγραψε το token και επικόλλησέ το εδώ.
+  </div>
+
+  <button class="save-btn" onclick="saveToken()">💾 Αποθήκευση</button>
+  <div id="tokenStatus" class="token-status"></div>
 </div>
 
-<!-- File input -->
-<input type="file" id="fileInput" accept=".pdf" multiple style="display:none">
-
-<!-- Toast -->
-<div class="toast" id="toast"></div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script src="config.js"></script>
 <script src="assets/js/app.js"></script>
 </body>
